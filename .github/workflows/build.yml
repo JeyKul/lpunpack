@@ -25,12 +25,27 @@ jobs:
           curl \
           libtool \
           autoconf \
-          automake
+          automake \
+          g++ \
+          libc6-dev \
+          clang \
+          pkg-config
 
     - name: Clone lpunpack repository from Google
       run: |
         git clone https://android.googlesource.com/platform/system/extras.git
         cd extras && git checkout main
+
+    - name: Download android-base dependencies
+      run: |
+        mkdir -p android-base
+        cd android-base
+        git clone https://android.googlesource.com/platform/system/base.git
+        cd base
+        git checkout master
+        # The headers for android-base are inside system/base/libcutils/include
+        export CXXFLAGS="$CXXFLAGS -I$(pwd)/libcutils/include"
+        export LDFLAGS="$LDFLAGS -L$(pwd)/libcutils/libs"
 
     - name: Build lpunpack
       run: |
