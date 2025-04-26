@@ -1,0 +1,51 @@
+name: Build and Release lpunpack
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: '0 0 * * *'  # Run every day at midnight UTC
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          build-essential \
+          git \
+          wget \
+          curl \
+          libtool \
+          autoconf \
+          automake
+
+    - name: Clone lpunpack repository from Google
+      run: |
+        git clone https://android.googlesource.com/platform/system/extras.git
+        cd extras && git checkout main
+
+    - name: Build lpunpack
+      run: |
+        cd extras/partition_tools
+        make lpunpack
+
+    - name: Create archive of lpunpack
+      run: |
+        tar czvf lpunpack.tar.gz extras/partition_tools/lpunpack
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: lpunpack.tar.gz
+        tag_name: latest-${{ github.run_number }}
+        name: Latest lpunpack Release ${{ github.run_number }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
