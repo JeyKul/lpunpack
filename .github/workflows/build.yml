@@ -33,18 +33,19 @@ jobs:
           python3 \
           python3-pip
 
-    - name: Install repo tool
+    - name: Download android-base headers
       run: |
-        curl https://storage.googleapis.com/git-repo-downloads/repo > ~/repo
-        chmod a+x ~/repo
-        sudo mv ~/repo /usr/local/bin/repo
+        # Download necessary AOSP android-base headers from GitHub mirror (if available)
+        mkdir -p ~/android-base
+        cd ~/android-base
+        wget https://github.com/LineageOS/android_system_base/archive/refs/heads/master.zip
+        unzip master.zip
+        mv android_system_base-master/libcutils/include ~/aosp-headers
 
-    - name: Initialize repo for AOSP source
+    - name: Set build environment for lpunpack
       run: |
-        mkdir -p ~/aosp
-        cd ~/aosp
-        repo init -u https://android.googlesource.com/platform/manifest.git -b master
-        repo sync -j4  # Sync only the necessary parts (this is large and may take time)
+        export CXXFLAGS="$CXXFLAGS -I$HOME/aosp-headers"
+        export LDFLAGS="$LDFLAGS -L$HOME/aosp-headers"
 
     - name: Clone lpunpack repository from Google
       run: |
