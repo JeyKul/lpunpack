@@ -29,23 +29,27 @@ jobs:
           g++ \
           libc6-dev \
           clang \
-          pkg-config
+          pkg-config \
+          python3 \
+          python3-pip
+
+    - name: Install repo tool
+      run: |
+        curl https://storage.googleapis.com/git-repo-downloads/repo > ~/repo
+        chmod a+x ~/repo
+        sudo mv ~/repo /usr/local/bin/repo
+
+    - name: Initialize repo for AOSP source
+      run: |
+        mkdir -p ~/aosp
+        cd ~/aosp
+        repo init -u https://android.googlesource.com/platform/manifest.git -b master
+        repo sync -j4  # Sync only the necessary parts (this is large and may take time)
 
     - name: Clone lpunpack repository from Google
       run: |
         git clone https://android.googlesource.com/platform/system/extras.git
         cd extras && git checkout main
-
-    - name: Download android-base dependencies
-      run: |
-        mkdir -p android-base
-        cd android-base
-        git clone https://android.googlesource.com/platform/system/base.git
-        cd base
-        git checkout master
-        # The headers for android-base are inside system/base/libcutils/include
-        export CXXFLAGS="$CXXFLAGS -I$(pwd)/libcutils/include"
-        export LDFLAGS="$LDFLAGS -L$(pwd)/libcutils/libs"
 
     - name: Build lpunpack
       run: |
